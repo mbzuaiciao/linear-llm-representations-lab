@@ -1,0 +1,52 @@
+[project]
+name = "linear-llm-representations-lab"
+version = "0.1.0"
+description = "Executable research tutorials on approximate linear structure in transformer representations"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "matplotlib>=3.9",
+  "numpy>=2.0",
+  "scikit-learn>=1.5",
+  "scipy>=1.14",
+  "torch>=2.4",
+  "transformers>=4.44",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+  "pyright>=1.1.380",
+  "pytest>=8.3",
+  "ruff>=0.6",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/linear_llm_lab"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.pyright]
+include = ["src", "experiments", "tutorials"]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
