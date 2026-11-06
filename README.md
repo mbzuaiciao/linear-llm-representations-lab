@@ -41,6 +41,8 @@ uv run pyright
 
 Python 3.12 is pinned in `.python-version`; `uv` manages the environment and lockfile. Experiments prefer CUDA, then Apple MPS, then CPU. The synthetic tutorials and tests are CPU-friendly. Tutorials 02 and 03 download `sshleifer/tiny-gpt2` by default; pass `--synthetic` for an offline smoke run.
 
+An Apple-inspired interactive companion textbook and artifact explorer is available in [`frontend/`](frontend/README.md). To run it locally: `cd frontend && npm install && npm run dev`.
+
 ## Reading order
 
 Each executable tutorial contains intuition, mathematics, an experiment, and interpretation/limitations.

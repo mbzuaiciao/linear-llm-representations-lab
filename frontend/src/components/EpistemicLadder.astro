@@ -1,0 +1,108 @@
+---
+// EpistemicLadder.astro
+const tiers = [
+  {
+    level: 1,
+    title: 'Linear Decodability',
+    test: 'A linear probe predicts a target property on held-out activations (y_hat = Wh + b).',
+    establishes: 'The activation geometry linearly separates the contrast.',
+    doesNotEstablish: 'The model utilizes this subspace computationally, or that the feature drives behavior.',
+    example: 'Tutorial 03: Probes achieve high accuracy on coordinate 0, but downstream logic completely ignores it.',
+    color: 'border-blue-500/30 bg-blue-500/5',
+    badge: 'Weakest Claim',
+  },
+  {
+    level: 2,
+    title: 'Linear Predictability',
+    test: 'Layer l+k hidden states are predicted by an affine map Ah_l + b.',
+    establishes: 'Empirical correlation between layers is well-approximated by least-squares.',
+    doesNotEstablish: 'Parameter parsimony. A d x d matrix has d^2 parameters, easily memorizing sample points.',
+    example: 'Tutorial 04 & 05: Identity and mean baselines must be reported to expose vacuous fits.',
+    color: 'border-cyan-500/30 bg-cyan-500/5',
+    badge: 'Capacity Confounds',
+  },
+  {
+    level: 3,
+    title: 'Low-Complexity Linear Predictability',
+    test: 'A low-rank factored map UV^T or small regime model fits held-out test data.',
+    establishes: 'The transition is genuinely compressible through fewer latent dimensions than ambient d.',
+    doesNotEstablish: 'Invariance to distribution shifts or counterfactual faithfulness.',
+    example: 'Tutorial 05 & 10: Rank sweeps show whether compression degrades test R^2.',
+    color: 'border-emerald-500/30 bg-emerald-500/5',
+    badge: 'Compressible Structure',
+  },
+  {
+    level: 4,
+    title: 'Out-of-Distribution Generalization',
+    test: 'A fitted map generalizes across prompt domains, syntax shifts, or unseen lexical templates.',
+    establishes: 'Structure is not merely prompt-template overfitting or memorized token patterns.',
+    doesNotEstablish: 'That internal activation manipulation causally alters the model’s algorithmic path.',
+    example: 'Tutorial 14 & Capstone: Holding out declarative prompts vs question shifts.',
+    color: 'border-amber-500/30 bg-amber-500/5',
+    badge: 'Robust Generalization',
+  },
+  {
+    level: 5,
+    title: 'Causal Linear Structure',
+    test: 'Intervening along direction v systematically changes downstream outputs with high selectivity.',
+    establishes: 'The subspace is part of the functional causal mechanism of the network.',
+    doesNotEstablish: 'That unmodified natural inference travels exclusively through this linear channel.',
+    example: 'Tutorial 07: Steering readouts verify causal sensitivity, but require mediation controls.',
+    color: 'border-purple-500/30 bg-purple-500/5',
+    badge: 'Strongest Claim',
+  },
+];
+---
+
+<div class="my-8 space-y-4">
+  <div class="flex items-center justify-between">
+    <div>
+      <h3 class="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+        The Epistemic Hierarchy of Linear Claims
+      </h3>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400">
+        Never collapse these distinct standards of evidence. Each step demands new empirical falsification.
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-3">
+    {
+      tiers.map((t) => (
+        <div class={`p-4 rounded-xl border ${t.color} relative overflow-hidden transition-all hover:scale-[1.005]`}>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+            <div class="flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-black text-xs font-bold flex items-center justify-center">
+                {t.level}
+              </span>
+              <h4 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                {t.title}
+              </h4>
+            </div>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 w-fit">
+              {t.badge}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs mt-3">
+            <div>
+              <span class="font-medium text-neutral-700 dark:text-neutral-300">Operational Test:</span>
+              <p class="text-neutral-500 dark:text-neutral-400 mt-0.5 font-mono text-[11px]">{t.test}</p>
+            </div>
+            <div>
+              <span class="font-medium text-emerald-700 dark:text-emerald-400">What It Establishes:</span>
+              <p class="text-neutral-500 dark:text-neutral-400 mt-0.5">{t.establishes}</p>
+            </div>
+          </div>
+
+          <div class="mt-2 pt-2 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row gap-2 text-xs">
+            <div class="flex-1">
+              <span class="font-medium text-amber-700 dark:text-amber-400">What It Fails to Establish:</span>
+              <span class="text-neutral-500 dark:text-neutral-400 ml-1">{t.doesNotEstablish}</span>
+            </div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</div>

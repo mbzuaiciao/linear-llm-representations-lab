@@ -1,0 +1,268 @@
+---
+// LocalVsGlobalExplainer.astro
+---
+
+<div class="apple-card p-6 md:p-8 space-y-6">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="px-2 py-0.5 text-[11px] font-medium rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+          Explainer 1
+        </span>
+        <span class="px-2 py-0.5 text-[11px] font-medium rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+          Tutorial 01 & 08 Companion
+        </span>
+      </div>
+      <h3 class="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+        Global Affine Fitting vs. Local Linearization (Jacobian)
+      </h3>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-2xl">
+        Every smooth nonlinear function looks flat under an infinitesimal microscope. But does a local linear map remain accurate across the finite activation transitions that matter in transformers?
+      </p>
+    </div>
+
+    <!-- Function Selector -->
+    <div class="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl w-fit">
+      <button
+        type="button"
+        data-fn="sin"
+        class="fn-btn px-3 py-1 text-xs font-medium rounded-lg transition-colors bg-white dark:bg-neutral-900 shadow-sm text-neutral-900 dark:text-neutral-100"
+      >
+        f(x) = sin(x)
+      </button>
+      <button
+        type="button"
+        data-fn="tanh"
+        class="fn-btn px-3 py-1 text-xs font-medium rounded-lg transition-colors text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+      >
+        f(x) = tanh(1.5x)
+      </button>
+    </div>
+  </div>
+
+  <!-- Interactive Controls & SVG Chart -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Controls Panel -->
+    <div class="space-y-5 bg-neutral-50 dark:bg-[#161618] p-5 rounded-xl border border-black/[0.04] dark:border-white/[0.04]">
+      <div>
+        <div class="flex justify-between items-center text-xs font-medium mb-1.5">
+          <label for="x0-slider" class="text-neutral-700 dark:text-neutral-300">
+            Expansion Point <code class="font-mono">x₀</code>
+          </label>
+          <span id="x0-val" class="font-mono text-neutral-900 dark:text-neutral-100 font-semibold">0.50</span>
+        </div>
+        <input
+          id="x0-slider"
+          type="range"
+          min="-2.2"
+          max="2.2"
+          step="0.05"
+          value="0.5"
+          class="w-full accent-blue-600 cursor-pointer"
+        />
+        <p class="text-[11px] text-neutral-400 mt-1">The activation point where the Jacobian tangent is evaluated.</p>
+      </div>
+
+      <div>
+        <div class="flex justify-between items-center text-xs font-medium mb-1.5">
+          <label for="delta-slider" class="text-neutral-700 dark:text-neutral-300">
+            Perturbation Radius <code class="font-mono">δ</code>
+          </label>
+          <span id="delta-val" class="font-mono text-neutral-900 dark:text-neutral-100 font-semibold">0.40</span>
+        </div>
+        <input
+          id="delta-slider"
+          type="range"
+          min="0.02"
+          max="1.50"
+          step="0.02"
+          value="0.4"
+          class="w-full accent-blue-600 cursor-pointer"
+        />
+        <p class="text-[11px] text-neutral-400 mt-1">Width of visited neighborhood: [x₀ - δ, x₀ + δ].</p>
+      </div>
+
+      <!-- Live Calculated Metrics Card -->
+      <div class="pt-3 border-t border-black/5 dark:border-white/5 space-y-2 text-xs">
+        <div class="font-semibold text-neutral-900 dark:text-neutral-100">Live Neighborhood Metrics</div>
+        
+        <div class="flex justify-between py-1 border-b border-black/[0.03] dark:border-white/[0.03]">
+          <span class="text-neutral-500">Relative Taylor Error:</span>
+          <span id="stat-taylor" class="font-mono font-medium text-neutral-900 dark:text-neutral-100 tabular-nums">0.000</span>
+        </div>
+
+        <div class="flex justify-between py-1 border-b border-black/[0.03] dark:border-white/[0.03]">
+          <span class="text-neutral-500">Local Tangent MSE:</span>
+          <span id="stat-local-mse" class="font-mono font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">0.000</span>
+        </div>
+
+        <div class="flex justify-between py-1 border-b border-black/[0.03] dark:border-white/[0.03]">
+          <span class="text-neutral-500">Global Affine MSE:</span>
+          <span id="stat-global-mse" class="font-mono font-medium text-neutral-900 dark:text-neutral-100 tabular-nums">0.000</span>
+        </div>
+
+        <div class="flex justify-between py-1">
+          <span class="text-neutral-500">Tangent Slope (J):</span>
+          <span id="stat-slope" class="font-mono font-medium text-blue-600 dark:text-blue-400 tabular-nums">0.000</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SVG Graph Container -->
+    <div class="lg:col-span-2 flex flex-col justify-between bg-white dark:bg-[#121214] p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.08]">
+      <div class="relative w-full aspect-[16/9] min-h-[260px]">
+        <svg id="explainer-svg" class="w-full h-full overflow-visible" viewBox="-3.2 -1.4 6.4 2.8">
+          <!-- Grid and Axes -->
+          <line x1="-3.2" y1="0" x2="3.2" y2="0" stroke="currentColor" class="text-neutral-200 dark:text-neutral-800" stroke-width="0.02" />
+          <line x1="0" y1="-1.4" x2="0" y2="1.4" stroke="currentColor" class="text-neutral-200 dark:text-neutral-800" stroke-width="0.02" />
+
+          <!-- Neighborhood Shading -->
+          <rect id="svg-neighborhood" x="0.1" y="-1.4" width="0.8" height="2.8" fill="rgba(0, 113, 227, 0.08)" />
+
+          <!-- Global Affine Line -->
+          <line id="svg-global" x1="-3" y1="0" x2="3" y2="0" stroke="#86868b" stroke-width="0.03" stroke-dasharray="0.1 0.08" />
+
+          <!-- Local Tangent Line -->
+          <line id="svg-tangent" x1="-3" y1="0" x2="3" y2="0" stroke="#0071e3" stroke-width="0.04" />
+
+          <!-- True Curve -->
+          <path id="svg-curve" d="" fill="none" stroke="#1d1d1f" class="dark:stroke-white" stroke-width="0.05" />
+
+          <!-- Tangent Point Marker -->
+          <circle id="svg-x0-pt" cx="0.5" cy="0" r="0.08" fill="#0071e3" />
+          <!-- Perturbed Point Marker -->
+          <circle id="svg-delta-pt" cx="0.9" cy="0" r="0.06" fill="#ff9500" />
+        </svg>
+      </div>
+
+      <!-- Graph Legend -->
+      <div class="flex flex-wrap items-center justify-center gap-4 text-[11px] text-neutral-500 pt-3 border-t border-black/5 dark:border-white/5 mt-2">
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-0.5 bg-neutral-900 dark:bg-white inline-block"></span> True Nonlinear f(x)
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-0.5 bg-blue-600 inline-block"></span> Local Tangent (1st-order Jacobian)
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-0.5 border-t border-dashed border-neutral-400 inline-block"></span> Global Affine Fit
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 bg-blue-500/20 rounded-xs inline-block"></span> Neighborhood [x₀ - δ, x₀ + δ]
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scientific Caveat Notice -->
+  <div class="p-3.5 bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+    <svg class="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <span class="font-semibold">Pedagogical Distinction:</span>
+      As <code class="font-mono">δ → 0</code>, the relative Taylor error drops to zero on any smooth manifold. That mathematical tautology does <em>not</em> prove that transformer activations operate in a linear regime. The empirical scientific question is whether the useful neighborhood <code class="font-mono">δ</code> is large enough to span realistic semantic transitions without decaying into severe higher-order error.
+    </div>
+  </div>
+</div>
+
+<script>
+  import { calculateLocalVsGlobal } from '../../lib/math-explainer';
+
+  function initExplainer() {
+    let currentFn: 'sin' | 'tanh' = 'sin';
+    const x0Slider = document.getElementById('x0-slider') as HTMLInputElement | null;
+    const deltaSlider = document.getElementById('delta-slider') as HTMLInputElement | null;
+    const x0Val = document.getElementById('x0-val');
+    const deltaVal = document.getElementById('delta-val');
+    const statTaylor = document.getElementById('stat-taylor');
+    const statLocalMse = document.getElementById('stat-local-mse');
+    const statGlobalMse = document.getElementById('stat-global-mse');
+    const statSlope = document.getElementById('stat-slope');
+
+    const svgCurve = document.getElementById('svg-curve');
+    const svgTangent = document.getElementById('svg-tangent');
+    const svgGlobal = document.getElementById('svg-global');
+    const svgNeighborhood = document.getElementById('svg-neighborhood');
+    const svgX0Pt = document.getElementById('svg-x0-pt');
+    const svgDeltaPt = document.getElementById('svg-delta-pt');
+
+    function update() {
+      if (!x0Slider || !deltaSlider) return;
+      const x0 = parseFloat(x0Slider.value);
+      const delta = parseFloat(deltaSlider.value);
+
+      if (x0Val) x0Val.textContent = x0.toFixed(2);
+      if (deltaVal) deltaVal.textContent = delta.toFixed(2);
+
+      const data = calculateLocalVsGlobal(currentFn, x0, delta, -3.2, 3.2, 100);
+
+      // Update statistics
+      if (statTaylor) statTaylor.textContent = data.neighborhood.relativeTaylorError.toFixed(4);
+      if (statLocalMse) statLocalMse.textContent = data.neighborhood.localTangentMse.toFixed(5);
+      if (statGlobalMse) statGlobalMse.textContent = data.neighborhood.globalAffineMse.toFixed(5);
+      if (statSlope) statSlope.textContent = data.neighborhood.tangentSlope.toFixed(3);
+
+      // SVG True curve path
+      let d = '';
+      for (let i = 0; i < data.curvePoints.length; i++) {
+        const pt = data.curvePoints[i];
+        // Invert Y for SVG coordinates
+        const sy = -pt.yTrue;
+        d += i === 0 ? `M ${pt.x.toFixed(3)} ${sy.toFixed(3)}` : ` L ${pt.x.toFixed(3)} ${sy.toFixed(3)}`;
+      }
+      svgCurve?.setAttribute('d', d);
+
+      // SVG Tangent line
+      const tMin = data.curvePoints[0];
+      const tMax = data.curvePoints[data.curvePoints.length - 1];
+      svgTangent?.setAttribute('x1', tMin.x.toFixed(3));
+      svgTangent?.setAttribute('y1', (-tMin.yTangent).toFixed(3));
+      svgTangent?.setAttribute('x2', tMax.x.toFixed(3));
+      svgTangent?.setAttribute('y2', (-tMax.yTangent).toFixed(3));
+
+      // SVG Global line
+      svgGlobal?.setAttribute('x1', tMin.x.toFixed(3));
+      svgGlobal?.setAttribute('y1', (-tMin.yGlobal).toFixed(3));
+      svgGlobal?.setAttribute('x2', tMax.x.toFixed(3));
+      svgGlobal?.setAttribute('y2', (-tMax.yGlobal).toFixed(3));
+
+      // SVG Neighborhood band
+      svgNeighborhood?.setAttribute('x', (x0 - delta).toFixed(3));
+      svgNeighborhood?.setAttribute('width', (2 * delta).toFixed(3));
+
+      // SVG Markers
+      const y0True = currentFn === 'sin' ? Math.sin(x0) : Math.tanh(1.5 * x0);
+      svgX0Pt?.setAttribute('cx', x0.toFixed(3));
+      svgX0Pt?.setAttribute('cy', (-y0True).toFixed(3));
+
+      const yPerturbed = currentFn === 'sin' ? Math.sin(x0 + delta) : Math.tanh(1.5 * (x0 + delta));
+      svgDeltaPt?.setAttribute('cx', (x0 + delta).toFixed(3));
+      svgDeltaPt?.setAttribute('cy', (-yPerturbed).toFixed(3));
+    }
+
+    x0Slider?.addEventListener('input', update);
+    deltaSlider?.addEventListener('input', update);
+
+    document.querySelectorAll('.fn-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLButtonElement;
+        const fn = target.getAttribute('data-fn') as 'sin' | 'tanh';
+        currentFn = fn;
+
+        document.querySelectorAll('.fn-btn').forEach((b) => {
+          b.classList.remove('bg-white', 'dark:bg-neutral-900', 'shadow-sm', 'text-neutral-900', 'dark:text-neutral-100');
+          b.classList.add('text-neutral-600', 'dark:text-neutral-400');
+        });
+        target.classList.add('bg-white', 'dark:bg-neutral-900', 'shadow-sm', 'text-neutral-900', 'dark:text-neutral-100');
+        target.classList.remove('text-neutral-600', 'dark:text-neutral-400');
+
+        update();
+      });
+    });
+
+    update();
+  }
+
+  initExplainer();
+  document.addEventListener('astro:after-swap', initExplainer);
+</script>

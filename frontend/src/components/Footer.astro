@@ -1,0 +1,54 @@
+---
+// Footer.astro
+---
+
+<footer class="mt-20 border-t border-black/[0.06] dark:border-white/[0.08] bg-white/50 dark:bg-[#141416]/50 py-12 transition-colors">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="md:col-span-2 space-y-3">
+        <div class="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+          Linear LLM Representations Lab
+        </div>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 max-w-md leading-relaxed">
+          An open, empirical research textbook exploring why nonlinear transformers can appear approximately linear on the hidden states they visit, with strict capacity controls, distribution-shift tests, and causal distinctions.
+        </p>
+        <div class="text-xs text-neutral-400 dark:text-neutral-500">
+          Built as an interactive companion for reproducible representation research.
+        </div>
+      </div>
+
+      <div>
+        <div class="text-xs font-semibold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider mb-3">
+          Exploration
+        </div>
+        <ul class="space-y-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <li><a href="/tutorials" class="hover:text-blue-500 transition-colors">14 Executable Tutorials</a></li>
+          <li><a href="/notes" class="hover:text-blue-500 transition-colors">13 Conceptual Notes</a></li>
+          <li><a href="/results" class="hover:text-blue-500 transition-colors">Capstone & Artifact Explorer</a></li>
+          <li><a href="/explainers" class="hover:text-blue-500 transition-colors">Client-Side Explainers</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="text-xs font-semibold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider mb-3">
+          Repository & CLI
+        </div>
+        <ul class="space-y-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <li><code class="text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">uv sync</code></li>
+          <li><code class="text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">uv run pytest</code></li>
+          <li><code class="text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">uv run python tutorials/01_linear_maps.py</code></li>
+          <li><code class="text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">uv run python experiments/run_capstone.py</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-8 pt-8 border-t border-black/[0.04] dark:border-white/[0.04] flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-400 dark:text-neutral-500 gap-4">
+      <div>
+        Static-first textbook. No model downloads or remote APIs required for browsing.
+      </div>
+      <div>
+        All Python scientific algorithms, tests, and outputs preserved without alteration.
+      </div>
+    </div>
+  </div>
+</footer>

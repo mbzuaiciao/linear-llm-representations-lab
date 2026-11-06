@@ -1,0 +1,170 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CapstoneViewer from '../../components/Results/CapstoneViewer.astro';
+import ExperimentCard from '../../components/Results/ExperimentCard.astro';
+import {
+  getAllExperiments,
+  getLocalLinearityArtifact,
+  getRankSweepArtifact,
+  getRegimeComparisonArtifact,
+  getTrajectoryAnalysisArtifact,
+  getLayerLinearityArtifact,
+} from '../../lib/results';
+
+const experiments = getAllExperiments();
+const localLin = getLocalLinearityArtifact();
+const rankSweep = getRankSweepArtifact();
+const regimes = getRegimeComparisonArtifact();
+const trajectory = getTrajectoryAnalysisArtifact();
+const layerLin = getLayerLinearityArtifact();
+
+// Extract metrics summaries for cards
+const rankSweepMetrics: Record<string, string | number> = rankSweep?.rows ? {
+  'Rank 1 R²': rankSweep.rows[0]?.r2 ?? 0,
+  'Rank 4 R²': rankSweep.rows[2]?.r2 ?? 0,
+  'Rank 32 R²': rankSweep.rows[5]?.r2 ?? 0,
+  'Min Parameters': rankSweep.rows[0]?.parameters ?? 0,
+  'Max Parameters': rankSweep.rows[5]?.parameters ?? 0,
+} : {};
+
+const trajectoryMetrics: Record<string, string | number> = trajectory?.layers ? {
+  'Layer 0 Turn Angle': `${trajectory.layers[0]?.mean_turn_angle?.toFixed(3)} rad`,
+  'Layer 5 Turn Angle': `${trajectory.layers[trajectory.layers.length - 1]?.mean_turn_angle?.toFixed(3)} rad`,
+  'Layer 0 Cosine': trajectory.layers[0]?.mean_displacement_cosine ?? 0,
+  'Layer 5 Cosine': trajectory.layers[trajectory.layers.length - 1]?.mean_displacement_cosine ?? 0,
+} : {};
+
+const localLinMetrics: Record<string, string | number> = localLin ? {
+  'Smallest Size (1e-3) Error': localLin.relativeErrors[0] ?? 0,
+  'Largest Size (1.0) Error': localLin.relativeErrors[localLin.relativeErrors.length - 1] ?? 0,
+  'Transition Scale': localLin.naturalTransitionScale,
+} : {};
+
+const regimesMetrics: Record<string, string | number> = regimes?.models ? {
+  'Global MSE': regimes.models.global?.mse ?? 0,
+  'Local-2 MSE': regimes.models.local_2?.mse ?? 0,
+  'Local-8 MSE': regimes.models.local_8?.mse ?? 0,
+  'Global Params': regimes.models.global?.parameters ?? 0,
+  'Local-8 Params': regimes.models.local_8?.parameters ?? 0,
+} : {};
+
+const layerLinMetrics: Record<string, string | number> = layerLin?.layers[0] ? {
+  'Layer Pair': `${layerLin.layers[0].layer_pair[0]}→${layerLin.layers[0].layer_pair[1]}`,
+  'Test R²': layerLin.layers[0].r2,
+  'Test MSE': layerLin.layers[0].mse,
+  'Cosine': layerLin.layers[0].cosine,
+  'Parameters': layerLin.layers[0].parameters,
+} : {};
+
+const otherExperiments = experiments.filter((e) => e.id !== 'capstone');
+---
+
+<BaseLayout title="Committed Experiments & Results Explorer" currentPath="/results">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-6">
+      <div>
+        <div class="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-1">
+          Empirical Validation
+        </div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-100">
+          Experiments & Results Explorer
+        </h1>
+        <p class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1 max-w-2xl">
+          Directly displaying committed machine-readable artifacts from <code class="font-mono">results/</code> and <code class="font-mono">figures/</code>. No fabricated metrics, no simulated model findings.
+        </p>
+      </div>
+
+      <!-- Quick Jump Links -->
+      <div class="flex flex-wrap items-center gap-1.5 text-xs">
+        <a href="#capstone" class="px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+          Capstone
+        </a>
+        <a href="#rank_sweep" class="px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+          Rank Sweep
+        </a>
+        <a href="#trajectory_analysis" class="px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+          Trajectory
+        </a>
+        <a href="#local_linearity" class="px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+          Local Linearity
+        </a>
+        <a href="#regime_comparison" class="px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+          Regimes
+        </a>
+        <a href="#layer_linearity" class="px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+          Layer Linearity
+        </a>
+      </div>
+    </div>
+
+    <!-- 1. Capstone Primary Viewer -->
+    <section id="capstone" class="scroll-mt-24 space-y-4">
+      <CapstoneViewer />
+    </section>
+
+    <!-- 2. Other Experiments Section -->
+    <section class="space-y-8 pt-6">
+      <div class="border-b border-black/[0.06] dark:border-white/[0.08] pb-3">
+        <h2 class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+          Component Experiments & Diagnostic Sweeps
+        </h2>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+          Dedicated evaluation runners targeting rank complexity, trajectory curvature, local Taylor error, and piecewise regimes.
+        </p>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Rank Sweep -->
+        {otherExperiments.find((e) => e.id === 'rank_sweep') && (
+          <ExperimentCard
+            experiment={otherExperiments.find((e) => e.id === 'rank_sweep')!}
+            metricsSummary={rankSweepMetrics}
+          />
+        )}
+
+        <!-- Trajectory Analysis -->
+        {otherExperiments.find((e) => e.id === 'trajectory_analysis') && (
+          <ExperimentCard
+            experiment={otherExperiments.find((e) => e.id === 'trajectory_analysis')!}
+            metricsSummary={trajectoryMetrics}
+          />
+        )}
+
+        <!-- Local Linearity -->
+        {otherExperiments.find((e) => e.id === 'local_linearity') && (
+          <ExperimentCard
+            experiment={otherExperiments.find((e) => e.id === 'local_linearity')!}
+            metricsSummary={localLinMetrics}
+          />
+        )}
+
+        <!-- Regime Comparison -->
+        {otherExperiments.find((e) => e.id === 'regime_comparison') && (
+          <ExperimentCard
+            experiment={otherExperiments.find((e) => e.id === 'regime_comparison')!}
+            metricsSummary={regimesMetrics}
+          />
+        )}
+
+        <!-- Layer Linearity -->
+        {otherExperiments.find((e) => e.id === 'layer_linearity') && (
+          <ExperimentCard
+            experiment={otherExperiments.find((e) => e.id === 'layer_linearity')!}
+            metricsSummary={layerLinMetrics}
+          />
+        )}
+      </div>
+    </section>
+
+    <!-- Artifact Refresh Instructions -->
+    <section class="p-6 rounded-2xl bg-neutral-100/70 dark:bg-[#161618]/70 border border-black/[0.06] dark:border-white/[0.08] space-y-3">
+      <h3 class="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+        How Artifact Updates Propagate to this Explorer
+      </h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl">
+        This static frontend reads directly from the repository's <code class="font-mono text-neutral-800 dark:text-neutral-200">results/*.json</code>, <code class="font-mono text-neutral-800 dark:text-neutral-200">results/*.md</code>, and <code class="font-mono text-neutral-800 dark:text-neutral-200">figures/*.png</code>. When a researcher executes a Python experiment runner, re-running <code class="font-mono text-neutral-800 dark:text-neutral-200">npm run build</code> or running <code class="font-mono text-neutral-800 dark:text-neutral-200">npm run dev</code> will automatically ingest and display the new metrics without modifying any scientific Python code.
+      </p>
+    </section>
+  </div>
+</BaseLayout>
