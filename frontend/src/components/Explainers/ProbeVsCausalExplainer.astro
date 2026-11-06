@@ -1,0 +1,219 @@
+---
+// ProbeVsCausalExplainer.astro
+---
+
+<div class="apple-card p-6 md:p-8 space-y-6">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="px-2 py-0.5 text-[11px] font-medium rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+          Explainer 2
+        </span>
+        <span class="px-2 py-0.5 text-[11px] font-medium rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+          Tutorial 03 Companion
+        </span>
+      </div>
+      <h3 class="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+        Linear Probe Decodability vs. Causal Intervention
+      </h3>
+      <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-2xl">
+        A linear probe can easily decode a label with near 100% accuracy from an activation subspace that downstream layers never read. Test this directly by intervening on probe vs causal dimensions.
+      </p>
+    </div>
+
+    <button
+      id="reset-probe-demo"
+      type="button"
+      class="text-xs px-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors w-fit font-medium"
+    >
+      Reset Interventions
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Controls Panel -->
+    <div class="space-y-5 bg-neutral-50 dark:bg-[#161618] p-5 rounded-xl border border-black/[0.04] dark:border-white/[0.04]">
+      <!-- Slider 1: Probe Intervention -->
+      <div>
+        <div class="flex justify-between items-center text-xs font-medium mb-1.5">
+          <label for="dz1-slider" class="text-neutral-700 dark:text-neutral-300">
+            Probe Axis Shift <code class="font-mono">Δz₁</code>
+          </label>
+          <span id="dz1-val" class="font-mono text-blue-600 dark:text-blue-400 font-semibold">0.00</span>
+        </div>
+        <input
+          id="dz1-slider"
+          type="range"
+          min="-4.0"
+          max="4.0"
+          step="0.1"
+          value="0"
+          class="w-full accent-blue-600 cursor-pointer"
+        />
+        <p class="text-[11px] text-neutral-400 mt-1">
+          Intervene on the readable feature (horizontal shift).
+        </p>
+      </div>
+
+      <!-- Slider 2: Causal Intervention -->
+      <div>
+        <div class="flex justify-between items-center text-xs font-medium mb-1.5">
+          <label for="dz2-slider" class="text-neutral-700 dark:text-neutral-300">
+            Causal Axis Shift <code class="font-mono">Δz₂</code>
+          </label>
+          <span id="dz2-val" class="font-mono text-purple-600 dark:text-purple-400 font-semibold">0.00</span>
+        </div>
+        <input
+          id="dz2-slider"
+          type="range"
+          min="-4.0"
+          max="4.0"
+          step="0.1"
+          value="0"
+          class="w-full accent-purple-600 cursor-pointer"
+        />
+        <p class="text-[11px] text-neutral-400 mt-1">
+          Intervene on the feature actually used downstream (vertical shift).
+        </p>
+      </div>
+
+      <!-- Live Results Comparison -->
+      <div class="pt-3 border-t border-black/5 dark:border-white/5 space-y-2 text-xs">
+        <div class="font-semibold text-neutral-900 dark:text-neutral-100">Intervention Outcome</div>
+
+        <div class="flex justify-between py-1 border-b border-black/[0.03] dark:border-white/[0.03]">
+          <span class="text-neutral-500">Probe Accuracy on z₁:</span>
+          <span id="probe-acc" class="font-mono font-medium text-blue-600 dark:text-blue-400 tabular-nums">96.0%</span>
+        </div>
+
+        <div class="flex justify-between py-1 border-b border-black/[0.03] dark:border-white/[0.03]">
+          <span class="text-neutral-500">Probe Prediction Flips:</span>
+          <span id="probe-flips" class="font-mono font-medium text-neutral-900 dark:text-neutral-100 tabular-nums">0.0%</span>
+        </div>
+
+        <div class="flex justify-between py-1 border-b border-black/[0.03] dark:border-white/[0.03]">
+          <span class="text-neutral-500">Causal Model Flips:</span>
+          <span id="model-flips" class="font-mono font-bold text-neutral-900 dark:text-neutral-100 tabular-nums">0.0%</span>
+        </div>
+
+        <div class="p-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-[11px]">
+          <span class="font-semibold text-neutral-700 dark:text-neutral-300">Model Rule:</span>
+          <span class="text-neutral-500 font-mono ml-1">ŷ = sign(z₂)</span>
+          <div class="text-neutral-400 mt-0.5">Downstream layers ignore z₁ entirely.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2D Representation Scatter Canvas / SVG -->
+    <div class="lg:col-span-2 flex flex-col justify-between bg-white dark:bg-[#121214] p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.08]">
+      <div class="relative w-full aspect-[16/9] min-h-[260px]">
+        <svg id="probe-svg" class="w-full h-full overflow-visible" viewBox="-6 -5 12 10">
+          <!-- Background decision boundary of downstream model: horizontal line z2 = 0 -->
+          <rect x="-6" y="-5" width="12" height="5" fill="rgba(239, 68, 68, 0.05)" />
+          <rect x="-6" y="0" width="12" height="5" fill="rgba(34, 197, 94, 0.05)" />
+
+          <!-- Axes -->
+          <line x1="-6" y1="0" x2="6" y2="0" stroke="currentColor" class="text-neutral-300 dark:text-neutral-700" stroke-width="0.06" stroke-dasharray="0.2 0.2" />
+          <line x1="0" y1="-5" x2="0" y2="5" stroke="currentColor" class="text-neutral-200 dark:text-neutral-800" stroke-width="0.04" />
+
+          <!-- Downstream Model Decision Boundary label -->
+          <text x="3.2" y="-0.2" font-size="0.35" class="fill-neutral-400 font-mono">Model Boundary (z₂=0)</text>
+          <!-- Probe Boundary (z1 = 0) -->
+          <text x="0.2" y="-4.2" font-size="0.35" class="fill-neutral-400 font-mono">Probe (z₁=0)</text>
+
+          <!-- Group of points -->
+          <g id="scatter-points"></g>
+        </svg>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex flex-wrap items-center justify-center gap-4 text-[11px] text-neutral-500 pt-3 border-t border-black/5 dark:border-white/5 mt-2">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Label Y = +1
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Label Y = -1
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-3 h-0.5 border-t border-dashed border-neutral-400 inline-block"></span> Model Threshold (z₂ = 0)
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Caveat Notice -->
+  <div class="p-3.5 bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 rounded-xl text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2.5">
+    <svg class="w-4 h-4 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <span class="font-semibold">Core Takeaway (Tutorial 03):</span>
+      A linear probe is an instrument for decoding representations, not an assertion about the model’s internal computation. If coordinate <code class="font-mono">z₁</code> is correlated with labels due to prompt structure or token frequency, a probe will discover it with 96%+ accuracy. Yet modifying <code class="font-mono">z₁</code> produces zero behavioral effect, because the downstream model only acts upon <code class="font-mono">z₂</code>.
+    </div>
+  </div>
+</div>
+
+<script>
+  import { generateProbeDataset, simulateProbeIntervention } from '../../lib/math-explainer';
+
+  function initProbeDemo() {
+    const dz1Slider = document.getElementById('dz1-slider') as HTMLInputElement | null;
+    const dz2Slider = document.getElementById('dz2-slider') as HTMLInputElement | null;
+    const dz1Val = document.getElementById('dz1-val');
+    const dz2Val = document.getElementById('dz2-val');
+    const probeAcc = document.getElementById('probe-acc');
+    const probeFlips = document.getElementById('probe-flips');
+    const modelFlips = document.getElementById('model-flips');
+    const scatterGroup = document.getElementById('scatter-points');
+    const resetBtn = document.getElementById('reset-probe-demo');
+
+    const points = generateProbeDataset(42, 80);
+
+    function render() {
+      if (!dz1Slider || !dz2Slider || !scatterGroup) return;
+      const dz1 = parseFloat(dz1Slider.value);
+      const dz2 = parseFloat(dz2Slider.value);
+
+      if (dz1Val) dz1Val.textContent = dz1 > 0 ? `+${dz1.toFixed(2)}` : dz1.toFixed(2);
+      if (dz2Val) dz2Val.textContent = dz2 > 0 ? `+${dz2.toFixed(2)}` : dz2.toFixed(2);
+
+      const metrics = simulateProbeIntervention(points, dz1, dz2);
+
+      if (probeAcc) probeAcc.textContent = `${(metrics.postInterventionProbeAccuracy * 100).toFixed(1)}%`;
+      if (probeFlips) probeFlips.textContent = `${(metrics.probePredictionChangeRate * 100).toFixed(1)}%`;
+      if (modelFlips) {
+        modelFlips.textContent = `${(metrics.causalModelFlippingRate * 100).toFixed(1)}%`;
+        if (metrics.causalModelFlippingRate > 0) {
+          modelFlips.className = 'font-mono font-bold text-purple-600 dark:text-purple-400 tabular-nums';
+        } else {
+          modelFlips.className = 'font-mono font-bold text-neutral-900 dark:text-neutral-100 tabular-nums';
+        }
+      }
+
+      // Draw SVG circles
+      let html = '';
+      for (const pt of points) {
+        const cx = pt.z1 + dz1;
+        // Invert Y for SVG
+        const cy = -(pt.z2 + dz2);
+        const color = pt.label === 1 ? '#22c55e' : '#ef4444';
+        html += `<circle cx="${cx.toFixed(3)}" cy="${cy.toFixed(3)}" r="0.16" fill="${color}" opacity="0.8" />`;
+      }
+      scatterGroup.innerHTML = html;
+    }
+
+    dz1Slider?.addEventListener('input', render);
+    dz2Slider?.addEventListener('input', render);
+
+    resetBtn?.addEventListener('click', () => {
+      if (dz1Slider) dz1Slider.value = '0';
+      if (dz2Slider) dz2Slider.value = '0';
+      render();
+    });
+
+    render();
+  }
+
+  initProbeDemo();
+  document.addEventListener('astro:after-swap', initProbeDemo);
+</script>

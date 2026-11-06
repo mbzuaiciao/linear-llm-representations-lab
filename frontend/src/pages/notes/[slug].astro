@@ -1,0 +1,106 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ReadingProgress from '../../components/ReadingProgress.astro';
+import { getAllNotes, type NoteItem } from '../../lib/content';
+import { renderMarkdown } from '../../lib/markdown';
+
+export function getStaticPaths() {
+  const notes = getAllNotes();
+  return notes.map((n, idx) => {
+    const prev = idx > 0 ? notes[idx - 1] : null;
+    const next = idx < notes.length - 1 ? notes[idx + 1] : null;
+    return {
+      params: { slug: n.slug },
+      props: { note: n, prev, next },
+    };
+  });
+}
+
+interface Props {
+  note: NoteItem;
+  prev: NoteItem | null;
+  next: NoteItem | null;
+}
+
+const { note, prev, next } = Astro.props;
+const htmlContent = renderMarkdown(note.rawContent);
+---
+
+<BaseLayout title={note.title} currentPath="/notes">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <!-- Breadcrumb & Reading Progress -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-neutral-500 border-b border-black/[0.06] dark:border-white/[0.08] pb-4">
+      <div class="flex items-center gap-2">
+        <a href="/notes" class="hover:text-emerald-600 transition-colors">Notes</a>
+        <span>/</span>
+        <span class="font-mono text-neutral-900 dark:text-neutral-100 font-semibold">{note.sourceFile}</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-neutral-400">{note.readingTimeMinutes} min read</span>
+        <ReadingProgress unitId={`note-${note.slug}`} unitTitle={note.title} />
+      </div>
+    </div>
+
+    <!-- Related Tutorials Alert if present -->
+    {note.relatedTutorialIds.length > 0 && (
+      <div class="p-3.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-500/20 text-xs flex flex-wrap items-center justify-between gap-2">
+        <span class="text-neutral-600 dark:text-neutral-300">
+          Companion note for executable lessons:
+        </span>
+        <div class="flex items-center gap-1.5">
+          {note.relatedTutorialIds.map((id) => (
+            <a
+              href={`/tutorials/${id}`}
+              class="px-2 py-0.5 rounded font-mono font-semibold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+            >
+              Tutorial {id}
+            </a>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- Rendered Markdown Content Article -->
+    <article class="apple-card p-6 md:p-10">
+      <div class="prose-content" set:html={htmlContent} />
+    </article>
+
+    <!-- Source file reference -->
+    <div class="p-4 rounded-xl bg-neutral-50 dark:bg-[#161618] border border-black/[0.04] dark:border-white/[0.04] text-xs text-neutral-500 flex items-center justify-between">
+      <span>Committed source: <code class="font-mono text-neutral-800 dark:text-neutral-200">{note.sourceFile}</code></span>
+      <span class="text-[11px] text-neutral-400">Directly rendered without alteration</span>
+    </div>
+
+    <!-- Prev / Next Navigation -->
+    <nav class="pt-6 border-t border-black/[0.06] dark:border-white/[0.08] grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {prev ? (
+        <a
+          href={`/notes/${prev.slug}`}
+          class="p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.08] hover:border-black/20 dark:hover:border-white/20 transition-all text-left space-y-1 group"
+        >
+          <div class="text-[11px] text-neutral-400">&larr; Previous Note</div>
+          <div class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+            {prev.title}
+          </div>
+        </a>
+      ) : (
+        <div></div>
+      )}
+
+      {next ? (
+        <a
+          href={`/notes/${next.slug}`}
+          class="p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.08] hover:border-black/20 dark:hover:border-white/20 transition-all text-right space-y-1 group sm:col-start-2"
+        >
+          <div class="text-[11px] text-neutral-400">Next Note &rarr;</div>
+          <div class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+            {next.title}
+          </div>
+        </a>
+      ) : (
+        <div></div>
+      )}
+    </nav>
+  </div>
+</BaseLayout>

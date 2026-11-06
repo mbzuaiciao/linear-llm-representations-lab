@@ -1,0 +1,181 @@
+---
+// SearchModal.astro
+---
+
+<div
+  id="search-modal"
+  class="fixed inset-0 z-50 hidden bg-black/40 backdrop-blur-sm flex items-start justify-center pt-20 px-4 transition-opacity"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Search textbook"
+>
+  <div
+    class="w-full max-w-2xl bg-white dark:bg-[#1c1c1e] rounded-2xl shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden transform transition-all"
+  >
+    <!-- Search Input Bar -->
+    <div class="relative flex items-center px-4 py-3 border-b border-black/5 dark:border-white/10">
+      <svg
+        class="w-5 h-5 text-neutral-400 mr-3"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
+      </svg>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="Search tutorials, notes, experiments, or explainers (e.g. 'Jacobian', 'probes', 'Koopman')..."
+        class="w-full bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 text-base focus:outline-none"
+      />
+      <kbd
+        id="search-esc"
+        class="hidden sm:inline-block px-2 py-0.5 text-xs text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-200 dark:border-neutral-700 font-mono"
+      >
+        ESC
+      </kbd>
+    </div>
+
+    <!-- Search Results List -->
+    <div
+      id="search-results"
+      class="max-h-[60vh] overflow-y-auto p-3 divide-y divide-black/5 dark:divide-white/5 space-y-1"
+    >
+      <div id="search-empty" class="p-6 text-center text-sm text-neutral-500">
+        Type to search across 14 tutorials, 13 conceptual notes, 6 experiments, and interactive explainers.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  interface SearchItem {
+    id: string;
+    title: string;
+    category: 'Tutorial' | 'Note' | 'Experiment' | 'Explainer';
+    url: string;
+    badge: string;
+    summary: string;
+  }
+
+  let searchIndex: SearchItem[] = [];
+  let isLoaded = false;
+
+  const modal = document.getElementById('search-modal');
+  const input = document.getElementById('search-input') as HTMLInputElement | null;
+  const resultsContainer = document.getElementById('search-results');
+
+  async function loadIndex() {
+    if (isLoaded) return;
+    try {
+      const res = await fetch('/search-index.json');
+      searchIndex = await res.json();
+      isLoaded = true;
+    } catch (e) {
+      console.error('Failed to load search index', e);
+    }
+  }
+
+  function openSearch() {
+    modal?.classList.remove('hidden');
+    loadIndex();
+    setTimeout(() => input?.focus(), 50);
+  }
+
+  function closeSearch() {
+    modal?.classList.add('hidden');
+    if (input) input.value = '';
+    renderResults([]);
+  }
+
+  function renderResults(results: SearchItem[]) {
+    if (!resultsContainer) return;
+
+    if (results.length === 0) {
+      resultsContainer.innerHTML = `
+        <div class="p-8 text-center text-sm text-neutral-500">
+          ${input?.value.trim() ? 'No matching topics or experiments found.' : 'Type to search across all tutorials, notes, experiments, and interactive explainers.'}
+        </div>
+      `;
+      return;
+    }
+
+    const html = results
+      .map(
+        (item) => `
+        <a
+          href="${item.url}"
+          class="block p-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/60 transition-colors group"
+        >
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full ${
+              item.category === 'Tutorial'
+                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                : item.category === 'Note'
+                ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                : item.category === 'Experiment'
+                ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                : 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300'
+            }">
+              ${item.category}
+            </span>
+            <span class="text-xs text-neutral-400 font-mono">${item.badge}</span>
+          </div>
+          <div class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+            ${item.title}
+          </div>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
+            ${item.summary}
+          </p>
+        </a>
+      `
+      )
+      .join('');
+
+    resultsContainer.innerHTML = html;
+  }
+
+  function search(query: string) {
+    const q = query.toLowerCase().trim();
+    if (!q) {
+      renderResults([]);
+      return;
+    }
+
+    const matches = searchIndex.filter(
+      (item) =>
+        item.title.toLowerCase().includes(q) ||
+        item.summary.toLowerCase().includes(q) ||
+        item.badge.toLowerCase().includes(q)
+    );
+
+    renderResults(matches.slice(0, 10));
+  }
+
+  input?.addEventListener('input', (e) => {
+    search((e.target as HTMLInputElement).value);
+  });
+
+  // Global triggers
+  window.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      modal?.classList.contains('hidden') ? openSearch() : closeSearch();
+    } else if (e.key === 'Escape' && !modal?.classList.contains('hidden')) {
+      closeSearch();
+    }
+  });
+
+  document.querySelectorAll('[data-open-search]').forEach((btn) => {
+    btn.addEventListener('click', openSearch);
+  });
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeSearch();
+  });
+</script>

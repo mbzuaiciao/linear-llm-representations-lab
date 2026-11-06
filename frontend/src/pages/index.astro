@@ -1,0 +1,266 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import EpistemicLadder from '../components/EpistemicLadder.astro';
+import LocalVsGlobalExplainer from '../components/Explainers/LocalVsGlobalExplainer.astro';
+import { getAllTutorials, getAllNotes } from '../lib/content';
+import { getCapstoneArtifact } from '../lib/results';
+
+const tutorials = getAllTutorials();
+const notes = getAllNotes();
+const capstone = getCapstoneArtifact();
+---
+
+<BaseLayout title="Overview & Epistemic Framework">
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden py-20 sm:py-28 border-b border-black/[0.06] dark:border-white/[0.08] bg-gradient-to-b from-neutral-50/50 to-white dark:from-neutral-900/20 dark:to-black">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-neutral-100 dark:bg-neutral-800 border border-black/5 dark:border-white/10 text-neutral-600 dark:text-neutral-400">
+        <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+        Interactive Empirical Research Textbook
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-100 leading-[1.15]">
+        Linear LLM Representations Lab
+      </h1>
+
+      <div class="max-w-3xl mx-auto p-6 rounded-2xl bg-white/70 dark:bg-[#1c1c1e]/70 border border-black/[0.06] dark:border-white/[0.08] shadow-sm nav-blur">
+        <p class="text-xs uppercase tracking-widest text-neutral-400 font-semibold mb-2">Central Scientific Inquiry</p>
+        <blockquote class="text-lg sm:text-xl font-medium text-neutral-800 dark:text-neutral-200 italic leading-relaxed">
+          “Why can a globally nonlinear transformer appear approximately linear on the hidden states it actually visits?”
+        </blockquote>
+      </div>
+
+      <p class="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+        Investigating whether apparent simplicity reflects residual architecture, optimization bias, restricted activation manifolds, local Taylor structure, or learned coordinates. <strong>This lab does not teach that LLMs are linear.</strong>
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <a
+          href="/tutorials/01"
+          class="px-5 py-2.5 rounded-full text-xs font-semibold bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-black transition-transform hover:scale-105 shadow-sm"
+        >
+          Start Tutorial 01
+        </a>
+        <a
+          href="/explainers"
+          class="px-5 py-2.5 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
+        >
+          Interactive Explainers
+        </a>
+        <a
+          href="/results"
+          class="px-5 py-2.5 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+        >
+          Capstone Results Explorer
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-20">
+    <!-- Epistemic Ladder Section -->
+    <section>
+      <div class="mb-4">
+        <div class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+          Epistemic Safeguards
+        </div>
+        <h2 class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+          How to Read a Positive Result
+        </h2>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 max-w-2xl mt-1">
+          Every positive fit must be paired with capacity, held-out, distribution-shift, or causal cautions. Never collapse these five non-equivalent claims:
+        </p>
+      </div>
+
+      <EpistemicLadder />
+    </section>
+
+    <!-- Interactive Explainer Spotlight -->
+    <section class="space-y-4">
+      <div>
+        <div class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+          Interactive In-Browser Demonstration
+        </div>
+        <h2 class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+          Global Fit vs. Local Linearization
+        </h2>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 max-w-2xl mt-1">
+          Explore how local first-order Taylor approximation compares with global affine fitting on a nonlinear curve as perturbation radius varies.
+        </p>
+      </div>
+
+      <LocalVsGlobalExplainer />
+
+      <div class="text-right">
+        <a href="/explainers" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
+          Explore all interactive explainers (including Linear Probe vs Causal Intervention) &rarr;
+        </a>
+      </div>
+    </section>
+
+    <!-- Capstone Highlights Card -->
+    {capstone && (
+      <section class="apple-card p-6 md:p-8 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-black/[0.06] dark:border-white/[0.08] pb-4">
+          <div>
+            <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
+              Primary Result
+            </span>
+            <h2 class="text-xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 mt-1">
+              Capstone: Pretrained Transformer Layer Transition
+            </h2>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+              Trained on short declarative sentences; tested on held-out declaratives and question-form prompts.
+            </p>
+          </div>
+
+          <a
+            href="/results#capstone"
+            class="px-4 py-2 rounded-xl text-xs font-semibold bg-neutral-900 text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity w-fit"
+          >
+            Full Capstone Artifact &rarr;
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="p-4 rounded-xl bg-neutral-50 dark:bg-[#161618] border border-black/[0.04] dark:border-white/[0.04]">
+            <div class="text-[11px] text-neutral-400">Affine Interp. R²</div>
+            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-1">0.8362</div>
+            <div class="text-[10px] text-neutral-500 mt-0.5">6 parameters (d=2)</div>
+          </div>
+          <div class="p-4 rounded-xl bg-neutral-50 dark:bg-[#161618] border border-black/[0.04] dark:border-white/[0.04]">
+            <div class="text-[11px] text-neutral-400">Affine Shift R²</div>
+            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-1">0.8585</div>
+            <div class="text-[10px] text-neutral-500 mt-0.5">Question prompts</div>
+          </div>
+          <div class="p-4 rounded-xl bg-neutral-50 dark:bg-[#161618] border border-black/[0.04] dark:border-white/[0.04]">
+            <div class="text-[11px] text-neutral-400">MLP Shift R²</div>
+            <div class="text-xl font-bold text-red-500 font-mono mt-1">-0.0723</div>
+            <div class="text-[10px] text-neutral-500 mt-0.5">162 parameters (overfits)</div>
+          </div>
+          <div class="p-4 rounded-xl bg-neutral-50 dark:bg-[#161618] border border-black/[0.04] dark:border-white/[0.04]">
+            <div class="text-[11px] text-neutral-400">Downstream Top-1</div>
+            <div class="text-xl font-bold text-neutral-900 dark:text-neutral-100 font-mono mt-1">99.3%</div>
+            <div class="text-[10px] text-neutral-500 mt-0.5">Preserved logits</div>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- 14 Tutorials Learning Path Grid -->
+    <section class="space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+        <div>
+          <div class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+            Curriculum
+          </div>
+          <h2 class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+            14 Executable Tutorials
+          </h2>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            Each tutorial includes intuition, mathematics, executable experiment code, and limitations.
+          </p>
+        </div>
+
+        <a href="/tutorials" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+          View all 14 tutorials &rarr;
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {tutorials.map((t) => (
+          <a
+            href={`/tutorials/${t.id}`}
+            class="apple-card p-5 apple-card-hover group flex flex-col justify-between"
+          >
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-mono font-bold text-neutral-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {t.id}
+                </span>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                  {t.sourceFile}
+                </span>
+              </div>
+              <h3 class="text-base font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                {t.title}
+              </h3>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
+                {t.intuition}
+              </p>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-black/[0.04] dark:border-white/[0.04] text-[11px] text-neutral-400 flex items-center justify-between">
+              <span class="italic">{t.centralDistinction}</span>
+              <span class="font-semibold text-blue-500">&rarr;</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- 13 Conceptual Notes Spine -->
+    <section class="space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+        <div>
+          <div class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
+            Conceptual Spine
+          </div>
+          <h2 class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+            13 Markdown Notes
+          </h2>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            Precise theoretical formulations, failure modes, literature mapping, and glossary.
+          </p>
+        </div>
+
+        <a href="/notes" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+          View all 13 notes &rarr;
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {notes.map((n) => (
+          <a
+            href={`/notes/${n.slug}`}
+            class="p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#1c1c1e] hover:border-emerald-500/50 transition-all hover:shadow-sm group"
+          >
+            <div class="flex items-center justify-between text-[11px] text-neutral-400 mb-1">
+              <span class="font-mono text-emerald-600 dark:text-emerald-400">notes/{n.slug}.md</span>
+              <span>{n.readingTimeMinutes} min</span>
+            </div>
+            <h3 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+              {n.title}
+            </h3>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- Reproducibility & Local Setup Section -->
+    <section class="p-6 md:p-8 rounded-2xl bg-neutral-100/70 dark:bg-[#161618]/70 border border-black/[0.06] dark:border-white/[0.08] space-y-4">
+      <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+        Local Scientific Reproduction & Static Refresh
+      </h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-2xl">
+        The Python research suite runs completely offline or with synthetic data via <code class="font-mono">uv</code>. Re-running experiments generates updated artifacts in <code class="font-mono">results/</code> and <code class="font-mono">figures/</code>, which this static frontend ingests on build without touching any Python code.
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+        <div class="p-3 bg-white dark:bg-[#121214] rounded-xl border border-black/[0.04] dark:border-white/[0.04] space-y-1">
+          <div class="text-[10px] text-neutral-400 font-sans uppercase">Run Python Suite</div>
+          <div class="text-neutral-800 dark:text-neutral-200">uv sync</div>
+          <div class="text-neutral-800 dark:text-neutral-200">uv run pytest</div>
+          <div class="text-neutral-800 dark:text-neutral-200">uv run ruff check .</div>
+        </div>
+
+        <div class="p-3 bg-white dark:bg-[#121214] rounded-xl border border-black/[0.04] dark:border-white/[0.04] space-y-1">
+          <div class="text-[10px] text-neutral-400 font-sans uppercase">Build & Test Frontend</div>
+          <div class="text-neutral-800 dark:text-neutral-200">cd frontend && npm install</div>
+          <div class="text-neutral-800 dark:text-neutral-200">npm test</div>
+          <div class="text-neutral-800 dark:text-neutral-200">npm run build</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

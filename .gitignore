@@ -11,3 +11,7 @@ results/*.json
 results/*.csv
 !figures/.gitkeep
 !results/capstone.json
+frontend/node_modules/
+frontend/dist/
+frontend/.astro/
+frontend/public/figures/*.png

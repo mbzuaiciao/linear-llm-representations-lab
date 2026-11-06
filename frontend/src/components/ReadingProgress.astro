@@ -1,0 +1,88 @@
+---
+interface Props {
+  unitId: string; // e.g. "tutorial-01" or "note-residual_stream"
+  unitTitle: string;
+}
+
+const { unitId, unitTitle } = Astro.props;
+---
+
+<div class="inline-flex items-center gap-2">
+  <button
+    type="button"
+    id={`toggle-progress-${unitId}`}
+    data-unit-id={unitId}
+    data-unit-title={unitTitle}
+    class="progress-toggle-btn inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border border-black/10 dark:border-white/10 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+    aria-pressed="false"
+  >
+    <svg class="check-icon w-3.5 h-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+    <span class="btn-label">Mark as completed</span>
+  </button>
+</div>
+
+<script>
+  function setupProgressToggle() {
+    const buttons = document.querySelectorAll('.progress-toggle-btn');
+    if (!buttons.length) return;
+
+    let completed: string[] = [];
+    try {
+      const stored = localStorage.getItem('llr_completed_units');
+      completed = stored ? JSON.parse(stored) : [];
+    } catch {}
+
+    buttons.forEach((btn) => {
+      const unitId = btn.getAttribute('data-unit-id');
+      if (!unitId) return;
+
+      const isCompleted = completed.includes(unitId);
+      updateBtnState(btn as HTMLButtonElement, isCompleted);
+
+      btn.addEventListener('click', () => {
+        let currentList: string[] = [];
+        try {
+          const stored = localStorage.getItem('llr_completed_units');
+          currentList = stored ? JSON.parse(stored) : [];
+        } catch {}
+
+        const idx = currentList.indexOf(unitId);
+        const newState = idx === -1;
+        if (newState) {
+          currentList.push(unitId);
+        } else {
+          currentList.splice(idx, 1);
+        }
+
+        localStorage.setItem('llr_completed_units', JSON.stringify(currentList));
+        updateBtnState(btn as HTMLButtonElement, newState);
+
+        // Dispatch custom event for header pill & overview
+        window.dispatchEvent(new CustomEvent('llr:progress-updated', { detail: { count: currentList.length } }));
+      });
+    });
+
+    function updateBtnState(btn: HTMLButtonElement, isCompleted: boolean) {
+      btn.setAttribute('aria-pressed', isCompleted ? 'true' : 'false');
+      const label = btn.querySelector('.btn-label');
+      const icon = btn.querySelector('.check-icon');
+
+      if (isCompleted) {
+        btn.classList.add('bg-emerald-50', 'dark:bg-emerald-950/40', 'border-emerald-300', 'dark:border-emerald-800', 'text-emerald-700', 'dark:text-emerald-300');
+        btn.classList.remove('bg-neutral-100', 'dark:bg-neutral-800', 'text-neutral-700', 'dark:text-neutral-300');
+        if (label) label.textContent = 'Completed';
+        if (icon) icon.classList.replace('text-neutral-400', 'text-emerald-600');
+      } else {
+        btn.classList.remove('bg-emerald-50', 'dark:bg-emerald-950/40', 'border-emerald-300', 'dark:border-emerald-800', 'text-emerald-700', 'dark:text-emerald-300');
+        btn.classList.add('bg-neutral-100', 'dark:bg-neutral-800', 'text-neutral-700', 'dark:text-neutral-300');
+        if (label) label.textContent = 'Mark as completed';
+        if (icon) icon.classList.replace('text-emerald-600', 'text-neutral-400');
+      }
+    }
+  }
+
+  setupProgressToggle();
+  document.addEventListener('astro:after-swap', setupProgressToggle);
+</script>

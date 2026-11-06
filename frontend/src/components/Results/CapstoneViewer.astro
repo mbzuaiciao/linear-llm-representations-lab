@@ -1,0 +1,175 @@
+---
+import { getCapstoneArtifact } from '../../lib/results';
+import { renderMarkdown } from '../../lib/markdown';
+
+const capstone = getCapstoneArtifact();
+const narrativeHtml = capstone ? renderMarkdown(capstone.markdownContent) : '';
+---
+
+{
+  capstone ? (
+    <div class="space-y-8">
+      <!-- Provenance Header Card -->
+      <div class="apple-card p-6 md:p-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/[0.06] dark:border-white/[0.08] pb-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                Primary Committed Artifact
+              </span>
+              <span class="px-2.5 py-0.5 text-xs font-mono rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                {capstone.model}
+              </span>
+            </div>
+            <h2 class="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
+              Capstone: Layer-to-Layer Prediction & Distribution Shift
+            </h2>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1 rounded-lg text-xs font-mono bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+              Seed {capstone.seed} • {capstone.samples} samples • Layers {capstone.layerPair[0]}→{capstone.layerPair[1]}
+            </span>
+          </div>
+        </div>
+
+        <!-- Quantitative Comparison Table -->
+        <div class="mt-6 overflow-x-auto">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead>
+              <tr class="border-b border-neutral-200 dark:border-neutral-800 text-neutral-500 font-semibold">
+                <th class="py-2.5 px-3">Model</th>
+                <th class="py-2.5 px-3 text-right">Interp. MSE</th>
+                <th class="py-2.5 px-3 text-right">Interp. R²</th>
+                <th class="py-2.5 px-3 text-right">Shift MSE</th>
+                <th class="py-2.5 px-3 text-right">Shift R²</th>
+                <th class="py-2.5 px-3 text-right">Top-1 Agreement</th>
+                <th class="py-2.5 px-3 text-right">Parameters</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-neutral-100 dark:divide-neutral-900 font-mono">
+              {capstone.rows.map((row) => {
+                const isHighlight = row.name === 'affine' || row.name === 'local_2';
+                return (
+                  <tr class={`transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/40 ${isHighlight ? 'bg-blue-50/40 dark:bg-blue-950/20 font-semibold' : ''}`}>
+                    <td class="py-2.5 px-3 font-sans font-medium text-neutral-900 dark:text-neutral-100">
+                      {row.name}
+                      {row.name === 'identity' && <span class="text-[10px] text-neutral-400 ml-1 font-normal font-sans">(baseline)</span>}
+                      {row.name === 'mlp' && <span class="text-[10px] text-amber-500 ml-1 font-normal font-sans">(overfits)</span>}
+                    </td>
+                    <td class="py-2.5 px-3 text-right tabular-nums text-neutral-600 dark:text-neutral-300">
+                      {row.interpMse.toFixed(4)}
+                    </td>
+                    <td class={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.interpR2 > 0.8 ? 'text-emerald-600 dark:text-emerald-400' : row.interpR2 < 0 ? 'text-red-500' : 'text-neutral-600 dark:text-neutral-300'}`}>
+                      {row.interpR2.toFixed(4)}
+                    </td>
+                    <td class="py-2.5 px-3 text-right tabular-nums text-neutral-600 dark:text-neutral-300">
+                      {row.shiftMse.toFixed(4)}
+                    </td>
+                    <td class={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.shiftR2 > 0.8 ? 'text-emerald-600 dark:text-emerald-400' : row.shiftR2 < 0 ? 'text-red-500' : 'text-neutral-600 dark:text-neutral-300'}`}>
+                      {row.shiftR2.toFixed(4)}
+                    </td>
+                    <td class="py-2.5 px-3 text-right tabular-nums text-neutral-900 dark:text-neutral-100">
+                      {row.top1Agreement !== undefined ? `${(row.top1Agreement * 100).toFixed(1)}%` : '—'}
+                    </td>
+                    <td class="py-2.5 px-3 text-right tabular-nums text-neutral-500">
+                      {row.parameters}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Comparative Figure & Narrative Grid -->
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <!-- Committed Figure -->
+          <div class="apple-card p-4 bg-neutral-50 dark:bg-[#141416]">
+            <div class="text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+              Committed Experiment Visualization (figures/capstone.png)
+            </div>
+            {capstone.hasFigure ? (
+              <img
+                src={capstone.figurePath}
+                alt="Capstone Experiment: Comparison of models on interpolation and shift"
+                class="w-full rounded-lg border border-black/[0.04] dark:border-white/[0.06] shadow-sm"
+                loading="lazy"
+              />
+            ) : (
+              <div class="p-8 text-center text-xs text-neutral-500 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+                Figure artifact absent. Generate via:
+                <code class="block mt-1 font-mono text-[11px] text-neutral-800 dark:text-neutral-200">
+                  {capstone.provenance.command}
+                </code>
+              </div>
+            )}
+            <p class="text-[11px] text-neutral-400 mt-2">
+              Committed plot from <code class="font-mono">figures/capstone.png</code> showing interpolation MSE vs. distribution-shift MSE across model classes.
+            </p>
+          </div>
+
+          <!-- Scientific Provenance & Caveats -->
+          <div class="space-y-4">
+            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+              <div class="font-bold flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Crucial Scientific Caveats
+              </div>
+              <ul class="list-disc pl-4 space-y-1 text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                <li><strong>Dimensionality trap:</strong> <code class="font-mono">tiny-gpt2</code> has hidden dimension <code class="font-mono">d = 2</code>. An affine map has only 6 parameters (<code class="font-mono">2×2 + 2</code>), so Rank-1 is almost full capacity.</li>
+                <li><strong>Template leakage:</strong> Fixed sentence frames can cause test tokens to appear linear due to lexical repetition rather than transformer depth geometry.</li>
+                <li><strong>Overparameterized MLP:</strong> The MLP has 162 parameters, causing severe overfitting (<code class="font-mono">R² &lt; 0</code>) on the 60-sample split.</li>
+                <li><strong>Top-1 agreement:</strong> 99.3% agreement through frozen unembedding confirms preservation of top token, but hides logit calibration errors.</li>
+              </ul>
+            </div>
+
+            <!-- Provenance Metadata Card -->
+            <div class="p-4 rounded-xl bg-neutral-50 dark:bg-[#161618] border border-black/[0.04] dark:border-white/[0.04] text-xs space-y-2">
+              <div class="font-semibold text-neutral-800 dark:text-neutral-200">Artifact Provenance</div>
+              <div class="grid grid-cols-2 gap-2 text-[11px] text-neutral-500">
+                <div>Source Script:</div>
+                <div class="font-mono text-neutral-700 dark:text-neutral-300">{capstone.provenance.script}</div>
+                <div>Output Artifact:</div>
+                <div class="font-mono text-neutral-700 dark:text-neutral-300">{capstone.provenance.jsonPath}</div>
+                <div>Model Type:</div>
+                <div class="text-neutral-700 dark:text-neutral-300 font-medium">Pretrained Transformer (Hugging Face)</div>
+              </div>
+              <div class="pt-2 border-t border-black/5 dark:border-white/5">
+                <span class="text-[11px] text-neutral-400">To regenerate:</span>
+                <code class="block mt-1 font-mono text-[11px] bg-neutral-200/60 dark:bg-neutral-800 p-1.5 rounded text-neutral-800 dark:text-neutral-200 overflow-x-auto">
+                  {capstone.provenance.command}
+                </code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rendered Narrative from results/capstone.md -->
+        <div class="mt-8 pt-8 border-t border-black/[0.06] dark:border-white/[0.08]">
+          <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
+            Committed Report: Interpretation & Falsification
+          </h3>
+          <div class="prose-content text-sm bg-neutral-50/60 dark:bg-[#161618]/60 p-6 rounded-2xl border border-black/[0.04] dark:border-white/[0.04]" set:html={narrativeHtml} />
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div class="apple-card p-12 text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center font-bold">
+        !
+      </div>
+      <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+        Capstone Artifact Not Found
+      </h3>
+      <p class="text-xs text-neutral-500 max-w-md mx-auto">
+        No committed <code class="font-mono">results/capstone.json</code> was detected. Run the experiment to generate machine-readable results:
+      </p>
+      <code class="inline-block font-mono text-xs bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5 rounded-lg text-neutral-800 dark:text-neutral-200">
+        uv run python experiments/run_capstone.py --transformer --samples 60
+      </code>
+    </div>
+  )
+}
